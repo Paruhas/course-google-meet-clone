@@ -1,30 +1,43 @@
 import Head from "next/head";
-import { useRef, useState } from "react";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 
-import googleMeetIcon from "../public/Assets/images/google-meet-icon.png";
-import googleMeetImg from "../public/Assets/images/google-meet-people.jpg";
+export default function index() {
+  const router = useRouter();
 
-export default function Home() {
-  const [enterCode, setEnterCode] = useState({
-    enterCode: "",
-  });
+  const [showMeetingContainer, setShowMeetingContainer] = useState(false);
 
-  const handlerEnterCodeInput = (e) => {
-    const { name, value } = e.target;
-    setEnterCode((prev) => ({ ...prev, [name]: value }));
-  };
+  useEffect(() => {
+    connectToMeetingRoom();
+  }, []);
 
-  const handlerOnClickJoin = () => {
-    window.location.replace(
-      `${window.location.origin}?meetingID=${enterCode.enterCode}`
-    );
-  };
+  const MyApp = (function () {
+    function init(uid, mid) {
+      alert("From MyApp");
+    }
 
-  const inputEnterCodeRef = useRef(null);
+    return {
+      _init: function (uid, mid) {
+        init(uid, mid);
+      },
+    };
+  })();
 
-  const handlerOnClickStartMeeting = () => {
-    inputEnterCodeRef.current.focus();
-  };
+  function connectToMeetingRoom() {
+    const urlParams = router.query;
+
+    const meeting_id = urlParams.meetingID;
+    const user_id = window.prompt("Enter your userId");
+
+    if (!user_id || !user_id.trim() || !meeting_id || !meeting_id.trim()) {
+      alert("user id or meeting id missing");
+      router.push("/action");
+      return;
+    }
+    setShowMeetingContainer(true);
+
+    MyApp._init(user_id, meeting_id);
+  }
 
   return (
     <>
@@ -32,11 +45,13 @@ export default function Home() {
         <meta charset="UTF-8" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Create or Join Meeting</title>
+        <title>Google Meet</title>
 
-        <link rel="stylesheet" href="../public/Assets/css/bootstrap.min.css" />
-        <link rel="stylesheet" href="../public/Assets/css/style.css" />
-
+        <link rel="stylesheet" href="public/Assets/css/bootstrap.min.css" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/icon?family=Material+Icons"
+        />
         <link
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Material+Icons"
@@ -48,137 +63,106 @@ export default function Home() {
       </Head>
 
       <div className="body">
-        <nav className="navbar navbar-expand-md fixed-top">
-          <img src={googleMeetIcon.src} className="logo" alt="" />
-          <a href="#" className="navbar-brand text-dark">
-            <strong>Google</strong> Meet
-          </a>
-          <div className="collapse navbar-collapse justify-content-between">
-            <ul className="navbar-nav mr-auto">
-              <li className="nav-item">
-                <a href="#">At a glance</a>
-              </li>
-              <li className="nav-item">
-                <a href="#">How it works</a>
-              </li>
-              <li className="nav-item">
-                <a href="#">Plan and price</a>
-              </li>
-            </ul>
-            <ul className="navbar-nav mr-0">
-              <li className="nav-item sign-in display-center">
-                <a href="#">Sing In</a>
-              </li>
-              <li className="nav-item">
-                <button className="btn btn-outline-secondary btn-lg text-info font-weight-bold">
-                  Join the meeting
-                </button>
-              </li>
-              <li className="nav-item">
-                <button
-                  className="btn btn-lg btn-info text-light font-weight-bold"
-                  onClick={() => handlerOnClickStartMeeting()}
-                >
-                  Start the meeting
-                </button>
-              </li>
-            </ul>
-          </div>
-        </nav>
-
-        <main>
-          <div className="jumbotron h-100 d-flex">
-            <div className="container w-50">
-              <h1 className="font-size-3rem">
-                Premium video meeting. Now it is available for free to everyone.
-              </h1>
-              <p className="font-size-20px">
-                We're redesigning the Google Meet service for secure business
-                meetings and making it free for everyone to use.
-              </p>
-              <ul className="display-center justify-content-center column-gap-20px">
-                <li>
-                  <button className="btn btn-lg text-light font-weight-bold display-center btn-01796b">
-                    <span className="material-icons me-2">video_call</span>New
-                    Meeting
-                  </button>
-                </li>
-                <ul className="d-flex align-items-center">
-                  <li className="pl-3">
-                    <button className="btn btn-lg btn-outline-secondary text-dark font-weight-bold display-center bg-white">
-                      <span className="material-icons me-2">keyboard</span>
-                      <input
-                        type="text"
-                        placeholder="Enter a code"
-                        className="enter-code border-none outline-none"
-                        name="enterCode"
-                        value={enterCode.enterCode}
-                        onChange={(e) => handlerEnterCodeInput(e)}
-                        ref={inputEnterCodeRef}
-                      />
-                    </button>
-                  </li>
-                  <li
-                    className="text-dark font-weight-bold ps-4 pe-4 join-action"
-                    role="button"
-                    onClick={() => handlerOnClickJoin()}
-                  >
-                    Join
-                  </li>
-                </ul>
-              </ul>
+        <main className="d-flex flex-column home-wrap">
+          <div className="g-top text-light">
+            <div className="top-remote-video-show-wrap d-flex">
+              <div
+                className={`${showMeetingContainer ? "" : "d-none"} w-75`}
+                id="meetingContainer"
+              >
+                <div className="call-wrap bg-black">
+                  <div className="video-wrap d-flex flex-wrap" id="divUsers">
+                    <div id="me" className="userbox display-center flex-column">
+                      <h2 className="display-center font-size-14px"></h2>
+                      <div className="display-center">
+                        <video
+                          autoPlay
+                          muted
+                          className="d-none"
+                          id="localVideoPlayer"
+                        ></video>
+                      </div>
+                    </div>
+                    <div
+                      id="otherTemplate"
+                      className="userbox display-center flex-column d-none"
+                    >
+                      <h2 className="display-center font-size-14px"></h2>
+                      <div className="display-center">
+                        <video autoPlay muted></video>
+                        <audio
+                          autoPlay
+                          controls
+                          muted
+                          className="d-none"
+                        ></audio>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="container w-50">
-              <img src={googleMeetImg.src} alt="" className="single-image" />
+            <div className="g-top-left bg-light text-secondary w-25 d-flex align-items-center justify-content-between ps-2 pe-2">
+              <div className="top-left-participant-wrap pt-2 cursor-pointer">
+                <div className="top-left-participant-icon">
+                  <span className="material-icons">people</span>
+                </div>
+                <div className="top-left-participant-count participant-count">
+                  2
+                </div>
+              </div>
+              <div className="top-left-chat-wrap pt-2 cursor-pointer">
+                <span className="material-icons">message</span>
+              </div>
+              <div className="top-left-time-wrap"></div>
+            </div>
+          </div>
+          <div className="g-bottom bg-light m-0 d-flex justify-content-between align-items-center">
+            <div className="bottom-left d-flex vh-10">
+              <div className="display-center cursor-pointer meeting-details-button">
+                Meeting Details
+                <span className="material-icons">keyboard_arrow_down</span>
+              </div>
+            </div>
+            <div className="bottom-middle d-flex justify-content-center align-items-center vh-10">
+              <div
+                className="mic-toggle-wrap action-icon-style display-center me-2 cursor-pointer"
+                id="miceMuteUnmute"
+              >
+                <span className="material-icons">mic_off</span>
+              </div>
+              <div className="action-icon-style display-center me-2 cursor-pointer">
+                <span className="end-call-wrap material-icons text-danger">
+                  call
+                </span>
+              </div>
+              <div className="video-toggle-wrap action-icon-style display-center cursor-pointer">
+                <span className="material-icons">videocam_off</span>
+              </div>
+            </div>
+            <div className="bottom-right d-flex justify-content-center align-items-center me-3 vh-10">
+              <div className="present-now-wrap d-flex justify-content-center flex-column align-items-center me-5 cursor-pointer">
+                <span className="material-icons">present_to_all</span>
+                <div>Present Now</div>
+              </div>
+              <div className="option-wrap cursor-pointer display-center vh-10 position-relative">
+                <div className="option-icon">
+                  <span className="material-icons">more_vert</span>
+                </div>
+              </div>
             </div>
           </div>
         </main>
-
-        <footer className="d-flex">
-          <div className="w-50 ">
-            <p className="text-center">
-              Learn more about{" "}
-              <span className="learn-more text-info">google meet</span>
-            </p>
-          </div>
-          <div className="w-50"></div>
-        </footer>
       </div>
 
       <style jsx>
         {`
-          .body {
-            font-family: robot, lato !importance;
-            font-size: large;
-            padding-top: 4rem;
+          .bg-black {
+            background-color: black;
           }
 
-          ul {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-          }
-
-          .navbar {
-            padding: 10px;
-          }
-
-          .logo {
-            height: 43px;
-          }
-
-          .navbar-brand {
-            font-size: 22px;
-            padding: 0 0 0 8px;
-            font-family: "PT Sans", Arial, sans-serif;
-          }
-
-          .nav-item a {
-            color: #5f6368;
-            font-siz: 16px;
-            padding: 0 10px;
-            font-weight: 600;
-            text-decoration: none;
+          .font-size-14px {
+            font-size: 14px;
           }
 
           .display-center {
@@ -187,50 +171,88 @@ export default function Home() {
             align-items: center;
           }
 
-          li.nav-item {
-            padding: 0 10px;
+          .cursor-pointer {
+            cursor: pointer;
+            padding: 5px;
           }
 
-          .jumbotron {
-            padding: 5rem 2rem;
-            margin-bottom: 2rem;
-            // background-color: #e9ecef;
-            border-radius: 0.3rem;
-          }
-
-          .font-size-3rem {
-            font-size: 3rem;
-          }
-
-          .font-size-20px {
-            font-size: 20px;
-          }
-
-          .single-image {
-            height: 390px;
-            border: 25px solid white;
+          .cursor-pointer:hover {
+            cursor: pointer;
+            padding: 5px;
+            background-color: rgb(225, 225, 225);
             border-radius: 5px;
-            box-shadow: 1px 1px 5px grey;
           }
 
-          .btn-01796b {
-            background-color: #01796b;
+          .home-wrap {
+            background-color: rgb(30, 30, 30);
           }
 
-          .bg-white {
-            background-color: #ffffff;
+          .vh-10 {
+            height: 10vh;
           }
 
-          .border-none {
-            border: none;
+          .g-top {
+            height: 90vh;
+            position: relative;
           }
 
-          .column-gap-20px {
-            column-gap: 20px;
+          .video-wrap {
+            height: 600px;
           }
 
-          .outline-none {
-            outline: none;
+          .video-wrap > * {
+            flex-grow: 1;
+            flex-shrink: 1;
+            flex-basis: 250px;
+            border: 1px solid white;
+          }
+
+          .g-top-left {
+            position: absolute;
+            right: 0;
+            height: 8vh;
+            top: 0;
+            border-bottom-left-radius: 10px;
+          }
+
+          .top-left-participant-wrap {
+            position: relative;
+          }
+
+          .top-left-participant-count {
+            position: absolute;
+            top: -2px;
+            right: -3px;
+            font-size: 15px;
+          }
+
+          .g-bottom {
+            // margin: 0 -10px !important;
+            padding: 0 20px;
+            box-shadow: 0 0 5px black;
+            z-index: 2;
+          }
+
+          .bottom-left {
+            position: relative;
+            padding: 5px;
+          }
+
+          .action-icon-style {
+            font-size: 8px !important;
+            height: 40px;
+            width: 40px;
+            border: 1px solid lightgrey;
+            border-radius: 50%;
+          }
+
+          .action-icon-style span.material-icons {
+            // font-size: 18px;
+          }
+
+          .end-call-wrap {
+            -ms-transform: rotate(135deg);
+            transform: rotate(135deg);
           }
         `}
       </style>
